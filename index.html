@@ -58,7 +58,7 @@ select,input{padding:6px;margin:3px;}
 
 <div class="card">
 <h2>레벨별 필요 소환 횟수</h2>
-<p>1~100 전 구간 필요 소환 횟수 16회로 동일</p>
+<p>1~100 전 구간 필요 소환 횟수 20회로 동일</p>
 </div>
 
 <script>
@@ -143,11 +143,11 @@ let totalCount=0
 while(true){
 
 if(curAsc===tarAsc){
-totalCount+=(tarLvl-curLvl)*16
+totalCount+=(tarLvl-curLvl)*20
 break
 }
 
-totalCount+=(100-curLvl)*16
+totalCount+=(100-curLvl)*20
 
 curAsc++
 curLvl=1
