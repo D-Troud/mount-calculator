@@ -53,6 +53,8 @@ select,input{padding:6px;margin:3px;}
 
 <div class="result" id="summonCount"></div>
 <div class="result" id="gearResult"></div>
+<div class="result" id="summonScoreResult"></div> <!-- 소환 점수 표시 영역 추가 -->
+<div class="result" id="mergeScoreResult"></div>   <!-- 합치기 점수 표시 영역 추가 -->
 
 </div>
 
@@ -144,6 +146,8 @@ let tarLvl=Number(tarLvlEl.value)
 ){
     summonCount.innerText="목표 레벨이 현재보다 낮습니다."
     gearResult.innerText=""
+    summonScoreResult.innerText=""
+    mergeScoreResult.innerText=""
     return
 }
 
@@ -172,8 +176,14 @@ let finalGear=totalGear/(1+bonus)
 let gearCeil=Math.ceil(finalGear)
 let gearK=(gearCeil/1000).toFixed(1).replace(/\.0$/,"")
 
+// 🔥 클랜 전쟁 점수 계산 (필요 소환 횟수 * 1080)
+let summonScore = totalCount * 1080
+let mergeScore = totalCount * 1080
+
 summonCount.innerText="필요 소환 횟수 : "+totalCount.toLocaleString()
 gearResult.innerText="필요 태엽 : "+gearCeil.toLocaleString()+" ("+gearK+"k)"
+summonScoreResult.innerText="클랜 전쟁 소환 점수(클랜 기술 풀업 기준) : "+summonScore.toLocaleString()
+mergeScoreResult.innerText="클랜 전쟁 합치기 점수(클랜 기술 풀업 기준) : "+mergeScore.toLocaleString()
 }
 
 // DOM
@@ -184,6 +194,8 @@ const tarLvlEl=document.getElementById("tarLvl")
 
 const summonCount=document.getElementById("summonCount")
 const gearResult=document.getElementById("gearResult")
+const summonScoreResult=document.getElementById("summonScoreResult")
+const mergeScoreResult=document.getElementById("mergeScoreResult")
 
 document.querySelectorAll("input,select").forEach(el=>{
 el.oninput=calculate
