@@ -21,6 +21,237 @@ th{background:#333;}
 <body>
 
 <h1>포지마스터 탈것 계산기</h1>
-<p>제작자 : 21서버 Dominant 클랜 리더 Troud (3승천 150레벨 확장 반영)</p>
+<p>제작자 : 구 21서버 Dominant 클랜 리더 Troud (3승천 150레벨 확장 반영)</p>
 
-<div
+<div class="card">
+<h2>기술 트리 티어 설정</h2>
+<div id="tiers"></div>
+</div>
+
+<div class="card">
+<h2>승천 / 레벨 설정</h2>
+
+현재 승천
+<select id="curAsc">
+<option>0</option><option>1</option><option>2</option><option>3</option>
+</select>
+
+현재 레벨
+<input id="curLvl" type="number" min="1" max="150" value="1">
+
+<br><br>
+
+목표 승천
+<select id="tarAsc">
+<option>0</option><option>1</option><option>2</option><option selected>3</option>
+</select>
+
+목표 레벨
+<input id="tarLvl" type="number" min="1" max="150" value="150">
+
+</div>
+
+<div class="card">
+<h2>계산 결과</h2>
+
+<div class="result" id="summonCount"></div>
+<div class="result" id="gearResult"></div>
+<div class="result" id="summonScoreResult"></div>
+<div class="result" id="mergeScoreResult"></div>
+
+</div>
+
+<div class="card">
+<h2>레벨별 필요 소환 횟수 (1~150)</h2>
+
+<table id="summonTable">
+<tr>
+<th>레벨</th>
+<th>필요 소환 횟수</th>
+</tr>
+</table>
+
+</div>
+
+<script>
+
+// 🔥 승천별 최대 레벨 반환 함수 (0~2승천: 100레벨, 3승천: 150레벨)
+function getMaxLevel(asc){
+return asc === 3 ? 150 : 100;
+}
+
+// 🔥 소환 횟수 함수 (1~100: 20회, 101~150: 레벨당 12씩 증가)
+function getSummonCount(lvl){
+if(lvl === 1) return '-';
+if(lvl <= 100) return 20;
+return 20 + (lvl - 100) * 12;
+}
+
+// 🔥 UI 생성 (비용 감소 T1~T6, 추가 기회 T1~T5)
+function createUI(){
+
+let html=""
+
+// 비용 감소 (T1 ~ T6)
+html+="<b>탈것 소환 비용 감소</b><br>"
+for(let i=1;i<=6;i++){
+html+="T"+i+" <select id='cost"+i+"' onchange='handleTier(\"cost\","+i+", 6)'>"
+for(let j=0;j<=5;j++) html+="<option>"+j+"</option>"
+html+="</select> "
+}
+html+="<div class='stat' id='costStat'></div><br>"
+
+// 추가 기회 (T1 ~ T5)
+html+="<b>추가 탈것 기회</b><br>"
+for(let i=1;i<=5;i++){
+html+="T"+i+" <select id='bonus"+i+"' onchange='handleTier(\"bonus\","+i+", 5)'>"
+for(let j=0;j<=5;j++) html+="<option>"+j+"</option>"
+html+="</select> "
+}
+html+="<div class='stat' id='bonusStat'></div>"
+
+document.getElementById("tiers").innerHTML=html
+}
+
+// 🔥 티어 로직
+function handleTier(type,t, maxTier){
+
+let id=type+t
+let val=Number(document.getElementById(id).value)
+
+// 0 → 상위 0
+if(val===0){
+for(let i=t+1;i<=maxTier;i++){
+document.getElementById(type+i).value=0
+}
+}
+
+// 2↑ → 하위 5
+if(val>=2){
+for(let i=1;i<t;i++){
+let el=document.getElementById(type+i)
+if(Number(el.value)===0) el.value=5
+}
+}
+
+calculate()
+}
+
+function getTotal(type, maxTier){
+let sum=0
+for(let i=1;i<=maxTier;i++){
+sum+=Number(document.getElementById(type+i).value)
+}
+return sum
+}
+
+// 🔥 계산
+function calculate(){
+
+let costReduction=getTotal("cost", 6)*0.01
+let bonus=getTotal("bonus", 5)*0.02
+
+document.getElementById("costStat").innerText=
+"현재 효과 : "+(costReduction*100).toFixed(1)+"%"
+
+document.getElementById("bonusStat").innerText=
+"현재 효과 : "+(bonus*100).toFixed(1)+"%"
+
+let curAsc=Number(curAscEl.value)
+let tarAsc=Number(tarAscEl.value)
+let curLvl=Number(curLvlEl.value)
+let tarLvl=Number(tarLvlEl.value)
+
+// 입력값 검증: 목표 레벨이 해당 승천의 최대 레벨을 넘지 않도록 제한
+let maxCurLvl = getMaxLevel(curAsc);
+let maxTarLvl = getMaxLevel(tarAsc);
+
+if(curLvl > maxCurLvl) curLvl = maxCurLvl;
+if(tarLvl > maxTarLvl) tarLvl = maxTarLvl;
+
+if(
+    curAsc > tarAsc ||
+    (curAsc === tarAsc && curLvl > tarLvl)
+){
+    summonCount.innerText="목표 레벨이 현재보다 낮습니다."
+    gearResult.innerText=""
+    summonScoreResult.innerText=""
+    mergeScoreResult.innerText=""
+    return
+}
+
+let totalCount=0
+
+while(true){
+
+if(curAsc===tarAsc){
+for(let i=curLvl+1;i<=tarLvl;i++){
+totalCount+= getSummonCount(i);
+}
+break
+}
+
+let maxLvl = getMaxLevel(curAsc);
+for(let i=curLvl+1;i<=maxLvl;i++){
+totalCount+= getSummonCount(i);
+}
+
+curAsc++
+curLvl=1
+}
+
+// 🔥 비용 계산
+let costPer=Math.round(50*(1-costReduction))
+
+let totalGear=totalCount*costPer
+
+let finalGear=totalGear/(1+bonus)
+
+let gearCeil=Math.ceil(finalGear)
+let gearK=(gearCeil/1000).toFixed(1).replace(/\.0$/,"")
+
+// 🔥 클랜 전쟁 점수 계산 (필요 소환 횟수 * 1080)
+let summonScore = totalCount * 1080
+let mergeScore = totalCount * 1080
+
+summonCount.innerText="필요 소환 횟수 : "+totalCount.toLocaleString()
+gearResult.innerText="필요 태엽 : "+gearCeil.toLocaleString()+" ("+gearK+"k)"
+summonScoreResult.innerText="클랜 전쟁 소환 점수(클랜 기술 풀업 기준) : "+summonScore.toLocaleString()
+mergeScoreResult.innerText="클랜 전쟁 합치기 점수(클랜 기술 풀업 기준) : "+mergeScore.toLocaleString()
+}
+
+// 🔥 표 생성 (1~150레벨)
+function createTable(){
+let html=""
+for(let i=1;i<=150;i++){
+html+="<tr>"
+html+="<td>"+i+"</td>"
+html+="<td>"+getSummonCount(i)+"</td>"
+html+="</tr>"
+}
+document.getElementById("summonTable").innerHTML+=html
+}
+
+// DOM
+const curAscEl=document.getElementById("curAsc")
+const tarAscEl=document.getElementById("tarAsc")
+const curLvlEl=document.getElementById("curLvl")
+const tarLvlEl=document.getElementById("tarLvl")
+
+const summonCount=document.getElementById("summonCount")
+const gearResult=document.getElementById("gearResult")
+const summonScoreResult=document.getElementById("summonScoreResult")
+const mergeScoreResult=document.getElementById("mergeScoreResult")
+
+document.querySelectorAll("input,select").forEach(el=>{
+el.oninput=calculate
+})
+
+createUI()
+createTable()
+calculate()
+
+</script>
+
+</body>
+</html>
